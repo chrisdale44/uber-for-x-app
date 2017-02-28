@@ -1,6 +1,6 @@
 var http = require("http");
 var express = require("express");
-var consolidate = require("consolidate");//1
+var consolidate = require("consolidate"); //1
 var _ = require("underscore");
 var bodyParser = require('body-parser');
 
@@ -9,38 +9,55 @@ var mongoClient = require("mongodb").MongoClient;
 
 var app = express();
 app.use(bodyParser.urlencoded({
-   extended: true,
+    extended: true,
 }));
 
-app.use(bodyParser.json({limit: '5mb'}));
+app.use(bodyParser.json({
+    limit: '5mb'
+}));
 
 app.set('views', 'views'); //tells your app to look for HTML files inside the views folder whenever it gets a request for a particular page. Set the folder-name from where you serve the html page. 
-app.use(express.static('./public')); //sets the folder from which static assets like stylesheets and JavaScripts will be served when a page loads on the browser 
+app.use(express.static('./public')); //tells your app to look for HTML files inside the views folder whenever it gets a request for a particular page. Set the folder-name from where you serve the html page. 
 
-app.set('view engine','html');
-app.engine('html',consolidate.underscore); // these 2 lines tell our app to use underscore template engine to parse our html files
+app.set('view engine', 'html');
+app.engine('html', consolidate.underscore); //Use underscore to parse templates when we do res.render
+
+var server = http.Server(app);
 var portNumber = 8000; //for locahost:8000
 
-http.createServer(app).listen(portNumber, function(){ //creating the server which is listening to the port number:8000, and calls a function within in which calls the initialize(app) function in the router module
-	console.log('Server listening at port '+ portNumber);
-	
-	var url = 'mongodb://localhost:27017/myUberApp';
-	mongoClient.connect(url, function(err, db) { //a connection with the mongodb is established here.
-		console.log("Connected to Database");
-		routes.initialize(app, db); //function defined in routes.js which is exported to be accessed by other modules
+var io = require('socket.io')(server); //Creating a new socket.io instance by passing the HTTP server object
 
-        app.get('/citizen.html', function(req, res){
-            res.render('citizen.html',{
+server.listen(portNumber, function() { //Runs the server on port 8000
+    console.log('Server listening at port ' + portNumber);
+
+    var url = 'mongodb://localhost:27017/myUberApp'; //Db name
+    mongoClient.connect(url, function(err, db) { //a connection with the mongodb is established here.
+        console.log("Connected to Database");
+
+        app.get('/citizen.html', function(req, res) { //a request to /citizen.html will render our citizen.html page
+            //Substitute the variable userId in citizen.html with the userId value extracted from query params of the request.
+            res.render('citizen.html', {
                 userId: req.query.userId
             });
         });
 
-        app.get('/cop.html', function(req, res){
+        app.get('/cop.html', function(req, res) {
             res.render('cop.html', {
                 userId: req.query.userId
             });
         });
-	});
+
+        io.on('connection', function(socket) { //Listen on the 'connection' event for incoming sockets
+            console.log('A user just connected');
+
+            socket.on('join', function(data) { //Listen to any join event from connected users
+                socket.join(data.userId); //User joins a unique room/channel that's named after the userId 
+                console.log("User joined room: " + data.userId);
+            });
+
+            routes.initialize(app, db, socket, io); //Pass socket and io objects that we could use at different parts of our app
+        });
+    });
 });
 
 /* 1. Not all the template engines work uniformly with express, hence this library in js, (consolidate), is used to make the template engines work uniformly. Altough it doesn't have any 

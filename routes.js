@@ -1,6 +1,6 @@
 var dbOperations = require('./db-operations');
 
-function initialize(app, db) {
+function initialize(app, db, socket, io) {
     // '/cops?lat=12.9718915&&lng=77.64115449999997'
     app.get('/cops', function(req, res){
         //Convert the query strings into Numbers
