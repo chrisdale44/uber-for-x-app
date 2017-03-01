@@ -40,3 +40,21 @@ function fetchCopDetails(db, userId, callback) {
     });
 }
 exports.fetchCopDetails = fetchCopDetails;
+
+//Saves details like citizen’s location, time
+function saveRequest(db, issueId, requestTime, location, citizenId, status, callback){
+    db.collection('requestsData').insert({
+        "_id": issueId,
+        "requestTime": requestTime,
+        "location": location,
+        "citizenId": citizenId,
+        "status": status
+    }, function(err, results){
+           if(err) {
+               console.log(err);
+           }else{
+               callback(results);
+           }
+    });
+}
+exports.saveRequest = saveRequest;
