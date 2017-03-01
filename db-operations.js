@@ -22,3 +22,21 @@ function fetchNearestCops(db, coordinates, callback) {
     });
 }
 exports.fetchNearestCops = fetchNearestCops;
+
+function fetchCopDetails(db, userId, callback) {
+    db.collection("policeData").findOne({
+        userId: userId
+    }, function(err, results) {
+        if (err) {
+            console.log(err);
+        } else {
+            callback({
+                copId: results.userId,
+                displayName: results.displayName,
+                phone: results.phone,
+                location: results.location
+            });
+        }
+    });
+}
+exports.fetchCopDetails = fetchCopDetails;
