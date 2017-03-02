@@ -47,6 +47,10 @@ server.listen(portNumber, function() { //Runs the server on port 8000
             });
         });
 
+        app.get('/data.html', function(req, res) {
+            res.render('data.html');
+        });
+
         io.on('connection', function(socket) { //Listen on the 'connection' event for incoming sockets
             console.log('A user just connected');
 

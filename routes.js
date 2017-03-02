@@ -62,7 +62,6 @@ function initialize(app, db, socket, io) {
 
     //Listen to a 'request-accepted' event from connected cops
     socket.on('request-accepted', function(eventData){
-
         //Convert string to MongoDb's ObjectId data-type
         var ObjectID = require('mongodb').ObjectID;
         var requestId = new ObjectID(eventData.requestDetails.requestId);
@@ -71,7 +70,31 @@ function initialize(app, db, socket, io) {
             //Fire a 'request-accepted' event to the citizen and send cop details
             io.sockets.in(eventData.requestDetails.citizenId).emit('request-accepted', eventData.copDetails);
         });
-    
+    });
+
+    app.get('/requests/info', function(req, res){
+        dbOperations.fetchRequests(db, function(results){
+            var features = [];
+            for(var i=0; i<results.length; i++){
+                features.push({
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: results[i].location.coordinates
+                    },
+                    properties: {
+                        status: results[i].status,
+                        requestTime: results[i].requestTime,
+                        address: results[i].location.address
+                    }
+                });
+            }
+            var geoJsonData = {
+                type: 'FeatureCollection',
+                features: features
+            }
+            res.json(geoJsonData);
+        });
     });
 }
 
