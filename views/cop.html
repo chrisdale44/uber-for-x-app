@@ -13,6 +13,10 @@
         <!-- Some info will be displayed here-->
     </h4>
 
+    <button onclick="helpCitizen()">
+        Help Citizen
+    </button>
+
     <div id="map"> 
         <!-- We will load a map here later-->
     </div>
@@ -69,6 +73,14 @@
             //display the data received from the event
             document.getElementById("notification").innerHTML = "Someone's being attacked by a wildling! \n" + JSON.stringify(requestDetails);
         });
+
+        function helpCitizen(){
+            //Fire a "request-accepted" event/signal and send relevant info back to server
+            socket.emit("request-accepted", {
+                requestDetails: requestDetails,
+                copDetails: copDetails
+            });
+        }
 
     </script>
 

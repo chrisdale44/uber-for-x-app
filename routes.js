@@ -59,6 +59,20 @@ function initialize(app, db, socket, io) {
             });
         });
     });
+
+    //Listen to a 'request-accepted' event from connected cops
+    socket.on('request-accepted', function(eventData){
+
+        //Convert string to MongoDb's ObjectId data-type
+        var ObjectID = require('mongodb').ObjectID;
+        var requestId = new ObjectID(eventData.requestDetails.requestId);
+        //For the request with requestId, update request details
+        dbOperations.updateRequest(db, requestId, eventData.copDetails.copId, 'engaged', function(results) {
+            //Fire a 'request-accepted' event to the citizen and send cop details
+            io.sockets.in(eventData.requestDetails.citizenId).emit('request-accepted', eventData.copDetails);
+        });
+    
+    });
 }
 
 exports.initialize = initialize;
